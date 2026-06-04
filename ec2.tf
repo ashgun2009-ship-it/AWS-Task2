@@ -51,11 +51,11 @@ data "aws_ami" "ubuntu" {
 
 # 5. Створюємо саму віртуалку EC2 з прив'язкою всіх знайдених ресурсів
 resource "aws_instance" "cmtr-o3e0v1ec-ec2" {
-  ami                         = data.aws_ami.ubuntu.id
-  instance_type               = "t2.micro"
-  subnet_id                   = data.aws_subnet.selected.id
-  vpc_security_group_ids      = [data.aws_security_group.selected.id]
-  
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "t2.micro"
+  subnet_id              = data.aws_subnet.selected.id
+  vpc_security_group_ids = [data.aws_security_group.selected.id]
+
   # Динамічне посилання на назву ключа з файлу ssh.tf
   key_name                    = aws_key_pair.cmtr-o3e0v1ec-keypair.key_name
   associate_public_ip_address = true
