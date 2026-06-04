@@ -6,7 +6,7 @@ data "aws_vpc" "selected" {
   }
 }
 
-# 2. Динамічно шукаємо публічну підмережу в зоні eu-west-1a (строго за ТЗ)
+# 2. Динамічно шукаємо публічну підмережу в зоні eu-west-1a
 data "aws_subnet" "selected" {
   vpc_id = data.aws_vpc.selected.id
 
@@ -57,20 +57,10 @@ resource "aws_instance" "cmtr-o3e0v1ec-ec2" {
   key_name                    = aws_key_pair.cmtr-o3e0v1ec-keypair.key_name
   associate_public_ip_address = true
 
+  # Чекаємо, поки ключ повністю зареєструється в AWS
   depends_on = [
     aws_key_pair.cmtr-o3e0v1ec-keypair
   ]
-
-  tags = {
-    Project = "epam-tf-lab"
-    ID      = "cmtr-o3e0v1ec"
-  }
-}
-
-# 6. ХАК: Примусово створюємо та прив'язуємо унікальний Public IP до нашої віртуалки
-resource "aws_eip" "cmtr-o3e0v1ec-eip" {
-  instance = aws_instance.cmtr-o3e0v1ec-ec2.id
-  domain   = "vpc"
 
   tags = {
     Project = "epam-tf-lab"
