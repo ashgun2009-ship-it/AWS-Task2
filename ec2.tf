@@ -7,7 +7,7 @@ data "aws_vpc" "selected" {
 }
 
 # 2. Динамічно шукаємо публічну підмережу всередині нашої VPC
-# Додано фільтр зони eu-west-1a, щоб зафіксувати ОДНУ підмережу
+# Фільтр по зоні доступності eu-west-1a прибирає помилку дублювання підмереж
 data "aws_subnet" "selected" {
   vpc_id = data.aws_vpc.selected.id
 
@@ -32,7 +32,7 @@ data "aws_security_group" "selected" {
   }
 }
 
-# 4. Динамічно шукаємо найсвіжіший офіційний образ Ubuntu 22.00 LTS
+# 4. Динамічно шукаємо найсвіжіший офіційний образ Ubuntu 22.04 LTS
 data "aws_ami" "ubuntu" {
   most_recent = true
 
@@ -46,7 +46,7 @@ data "aws_ami" "ubuntu" {
     values = ["hvm"]
   }
 
-  owners = ["099720109477"] # ID власника Canonical (Ubuntu)
+  owners = ["099720109477"] # ID Canonical (Ubuntu)
 }
 
 # 5. Створюємо саму віртуалку EC2 з прив'язкою всіх знайдених ресурсів
@@ -55,8 +55,15 @@ resource "aws_instance" "cmtr-o3e0v1ec-ec2" {
   instance_type               = "t2.micro"
   subnet_id                   = data.aws_subnet.selected.id
   vpc_security_group_ids      = [data.aws_security_group.selected.id]
-  key_name                    = "cmtr-o3e0v1ec-keypair"
+  
+  # Динамічне посилання на назву ключа з файлу ssh.tf
+  key_name                    = aws_key_pair.cmtr-o3e0v1ec-keypair.key_name
   associate_public_ip_address = true
+
+  # Створюємо строгу чергу: спочатку ключ, потім — сервер
+  depends_on = [
+    aws_key_pair.cmtr-o3e0v1ec-keypair
+  ]
 
   tags = {
     Project = "epam-tf-lab"
