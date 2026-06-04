@@ -6,8 +6,7 @@ data "aws_vpc" "selected" {
   }
 }
 
-# 2. Динамічно шукаємо публічну підмережу всередині нашої VPC
-# Фільтр по зоні доступності eu-west-1a прибирає помилку дублювання підмереж
+# 2. Динамічно шукаємо публічну підмережу в зоні eu-west-1a (строго за ТЗ)
 data "aws_subnet" "selected" {
   vpc_id = data.aws_vpc.selected.id
 
@@ -22,7 +21,7 @@ data "aws_subnet" "selected" {
   }
 }
 
-# 3. Динамічно шукаємо групу безпеки за назвою всередині нашої VPC
+# 3. Динамічно шукаємо групу безпеки
 data "aws_security_group" "selected" {
   vpc_id = data.aws_vpc.selected.id
 
@@ -32,7 +31,7 @@ data "aws_security_group" "selected" {
   }
 }
 
-# 4. Динамічно шукаємо найсвіжіший офіційний образ Ubuntu 22.04 LTS
+# 4. Динамічно шукаємо образ Ubuntu 22.04 LTS
 data "aws_ami" "ubuntu" {
   most_recent = true
 
@@ -46,24 +45,32 @@ data "aws_ami" "ubuntu" {
     values = ["hvm"]
   }
 
-  owners = ["099720109477"] # ID Canonical (Ubuntu)
+  owners = ["099720109477"]
 }
 
-# 5. Створюємо саму віртуалку EC2 з прив'язкою всіх знайдених ресурсів
+# 5. Створюємо віртуалку EC2
 resource "aws_instance" "cmtr-o3e0v1ec-ec2" {
-  ami                    = data.aws_ami.ubuntu.id
-  instance_type          = "t2.micro"
-  subnet_id              = data.aws_subnet.selected.id
-  vpc_security_group_ids = [data.aws_security_group.selected.id]
-
-  # Динамічне посилання на назву ключа з файлу ssh.tf
+  ami                         = data.aws_ami.ubuntu.id
+  instance_type               = "t2.micro"
+  subnet_id                   = data.aws_subnet.selected.id
+  vpc_security_group_ids      = [data.aws_security_group.selected.id]
   key_name                    = aws_key_pair.cmtr-o3e0v1ec-keypair.key_name
   associate_public_ip_address = true
 
-  # Створюємо строгу чергу: спочатку ключ, потім — сервер
   depends_on = [
     aws_key_pair.cmtr-o3e0v1ec-keypair
   ]
+
+  tags = {
+    Project = "epam-tf-lab"
+    ID      = "cmtr-o3e0v1ec"
+  }
+}
+
+# 6. ХАК: Примусово створюємо та прив'язуємо унікальний Public IP до нашої віртуалки
+resource "aws_eip" "cmtr-o3e0v1ec-eip" {
+  instance = aws_instance.cmtr-o3e0v1ec-ec2.id
+  domain   = "vpc"
 
   tags = {
     Project = "epam-tf-lab"
