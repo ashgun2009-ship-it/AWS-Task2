@@ -63,6 +63,7 @@ resource "aws_instance" "cmtr-o3e0v1ec-ec2" {
   ]
 
   tags = {
+    Name    = "cmtr-o3e0v1ec-ec2"
     Project = "epam-tf-lab"
     ID      = "cmtr-o3e0v1ec"
   }
