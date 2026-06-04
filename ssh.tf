@@ -1,11 +1,3 @@
-terraform {
-  required_version = ">= 1.5.7"
-}
-
-provider "aws" {
-  region = "eu-west-1"
-}
-
 resource "aws_key_pair" "cmtr-o3e0v1ec-keypair" {
   key_name   = "cmtr-o3e0v1ec-keypair"
   public_key = var.ssh_key
